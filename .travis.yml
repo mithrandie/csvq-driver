@@ -4,6 +4,8 @@ sudo: false
 go:
   - "1.12.x"
 
+install: true
+
 script:
   - env GO111MODULE=on go test ./...
 
