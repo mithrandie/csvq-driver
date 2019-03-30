@@ -10,27 +10,24 @@ import (
 	"github.com/mithrandie/ternary"
 )
 
-type ResultSet struct {
+type resultSet struct {
 	view     *query.View
 	rowIndex int
 }
 
-func NewResultSet(view *query.View) *ResultSet {
-	return &ResultSet{
+func newResultSet(view *query.View) *resultSet {
+	return &resultSet{
 		view:     view,
 		rowIndex: 0,
 	}
 }
 
-func (r *ResultSet) Columns() []string {
-	if r == nil {
-		return nil
-	}
+func (r *resultSet) columns() []string {
 	return r.view.Header.TableColumnNames()
 }
 
-func (r *ResultSet) Next(dest []driver.Value) error {
-	if r == nil || r.view.RecordLen() <= r.rowIndex {
+func (r *resultSet) next(dest []driver.Value) error {
+	if r.view.RecordLen() <= r.rowIndex {
 		return io.EOF
 	}
 
@@ -67,14 +64,14 @@ func (r *ResultSet) Next(dest []driver.Value) error {
 }
 
 type Rows struct {
-	resultSets []*ResultSet
+	resultSets []*resultSet
 	index      int
 }
 
 func NewRows(selectedViews []*query.View) *Rows {
-	sets := make([]*ResultSet, 0, len(selectedViews))
+	sets := make([]*resultSet, 0, len(selectedViews))
 	for i := range selectedViews {
-		sets = append(sets, NewResultSet(selectedViews[i]))
+		sets = append(sets, newResultSet(selectedViews[i]))
 	}
 
 	return &Rows{
@@ -88,7 +85,7 @@ func (r *Rows) Columns() []string {
 		return nil
 	}
 
-	return r.resultSets[r.index].Columns()
+	return r.resultSets[r.index].columns()
 }
 
 func (r *Rows) Close() error {
@@ -98,19 +95,14 @@ func (r *Rows) Close() error {
 }
 
 func (r *Rows) Next(dest []driver.Value) error {
-	if len(r.resultSets) <= r.index || r.resultSets[r.index].view.RecordLen() <= r.index {
+	if len(r.resultSets) <= r.index {
 		return io.EOF
 	}
-
-	if len(r.resultSets[r.index].view.RecordSet[r.index]) != len(dest) {
-		return errors.New("column length does not match")
-	}
-
-	return r.resultSets[r.index].Next(dest)
+	return r.resultSets[r.index].next(dest)
 }
 
 func (r *Rows) HasNextResultSet() bool {
-	return r.index < len(r.resultSets)
+	return r.index+1 < len(r.resultSets)
 }
 
 func (r *Rows) NextResultSet() error {

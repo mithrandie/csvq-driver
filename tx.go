@@ -21,23 +21,19 @@ func NewTx(proc *query.Processor) (driver.Tx, error) {
 }
 
 func (tx Tx) Commit() error {
-	token := parser.Token{
-		Token:   parser.COMMIT,
-		Literal: "COMMIT",
-		Line:    1,
-		Char:    1,
+	expr := parser.TransactionControl{Token: parser.COMMIT}
+	err := tx.proc.Commit(expr)
+	if err == nil {
+		tx.proc.Tx.AutoCommit = true
 	}
-	expr := parser.TransactionControl{BaseExpr: parser.NewBaseExpr(token), Token: parser.COMMIT}
-	return tx.proc.Commit(expr)
+	return err
 }
 
 func (tx Tx) Rollback() error {
-	token := parser.Token{
-		Token:   parser.ROLLBACK,
-		Literal: "ROLLBACK",
-		Line:    1,
-		Char:    1,
+	expr := parser.TransactionControl{Token: parser.ROLLBACK}
+	err := tx.proc.Rollback(expr)
+	if err == nil {
+		tx.proc.Tx.AutoCommit = true
 	}
-	expr := parser.TransactionControl{BaseExpr: parser.NewBaseExpr(token), Token: parser.ROLLBACK}
-	return tx.proc.Rollback(expr)
+	return err
 }

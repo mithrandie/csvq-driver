@@ -2,6 +2,7 @@ package csvq
 
 import (
 	"context"
+	"database/sql"
 	"database/sql/driver"
 	"errors"
 	"strings"
@@ -11,17 +12,17 @@ import (
 	"github.com/mithrandie/csvq/lib/query"
 )
 
-type ClosingError struct {
+type CompositeError struct {
 	Errors []error
 }
 
-func NewClosingError(errs []error) error {
-	return &ClosingError{
+func NewCompositeError(errs []error) error {
+	return &CompositeError{
 		Errors: errs,
 	}
 }
 
-func (e ClosingError) Error() string {
+func (e CompositeError) Error() string {
 	list := make([]string, 0, len(e.Errors))
 	for _, err := range e.Errors {
 		list = append(list, err.Error())
@@ -34,6 +35,7 @@ type Conn struct {
 	defaultWaitTimeout time.Duration
 	retryDelay         time.Duration
 	proc               *query.Processor
+	id                 int
 }
 
 func NewConn(ctx context.Context, dsn string, defaultWaitTimeout time.Duration, retryDelay time.Duration) (*Conn, error) {
@@ -59,7 +61,7 @@ func NewConn(ctx context.Context, dsn string, defaultWaitTimeout time.Duration, 
 	}, nil
 }
 
-func (c *Conn) Close() (err error) {
+func (c *Conn) Close() error {
 	var errs []error
 
 	if err := c.proc.AutoRollback(); err != nil {
@@ -69,14 +71,24 @@ func (c *Conn) Close() (err error) {
 		errs = append(errs, err)
 	}
 
-	if errs != nil {
-		err = NewClosingError(errs)
+	var err error
+	switch len(errs) {
+	case 0:
+		//Do nothing
+	case 1:
+		err = errs[0]
+	default:
+		err = NewCompositeError(errs)
 	}
-	return
+	return err
 }
 
-func (c *Conn) Prepare(query string) (driver.Stmt, error) {
-	return nil, errors.New("csvq does not support prepared statement")
+func (c *Conn) Prepare(queryString string) (driver.Stmt, error) {
+	return c.PrepareContext(context.Background(), queryString)
+}
+
+func (c *Conn) PrepareContext(ctx context.Context, queryString string) (driver.Stmt, error) {
+	return NewStmt(ctx, c.proc, queryString)
 }
 
 func (c *Conn) Begin() (driver.Tx, error) {
@@ -84,14 +96,17 @@ func (c *Conn) Begin() (driver.Tx, error) {
 }
 
 func (c *Conn) BeginTx(ctx context.Context, opts driver.TxOptions) (driver.Tx, error) {
+	if opts.Isolation != driver.IsolationLevel(sql.LevelDefault) {
+		return nil, errors.New("csvq does not support non-default isolation level")
+	}
+	if opts.ReadOnly {
+		return nil, errors.New("csvq does not support read-only transactions")
+	}
+
 	return NewTx(c.proc)
 }
 
 func (c *Conn) QueryContext(ctx context.Context, queryString string, args []driver.NamedValue) (driver.Rows, error) {
-	if 0 < len(args) {
-		return nil, errors.New("csvq does not support prepared statement")
-	}
-
 	if err := c.exec(ctx, queryString, args); err != nil {
 		return nil, err
 	}
@@ -99,10 +114,6 @@ func (c *Conn) QueryContext(ctx context.Context, queryString string, args []driv
 }
 
 func (c *Conn) ExecContext(ctx context.Context, queryString string, args []driver.NamedValue) (driver.Result, error) {
-	if 0 < len(args) {
-		return nil, errors.New("csvq does not support prepared statement")
-	}
-
 	if err := c.exec(ctx, queryString, args); err != nil {
 		return nil, err
 	}
@@ -110,7 +121,29 @@ func (c *Conn) ExecContext(ctx context.Context, queryString string, args []drive
 }
 
 func (c *Conn) exec(ctx context.Context, queryString string, args []driver.NamedValue) error {
-	statements, err := parser.Parse(queryString, "", c.proc.Tx.Flags.DatetimeFormat)
+	if 0 < len(args) {
+		var selectedViews []*query.View
+		var affectedRows int
+
+		stmt, err := c.PrepareContext(ctx, queryString)
+		if err != nil {
+			return err
+		}
+		defer func() {
+			_ = stmt.Close()
+			c.proc.Tx.SelectedViews = selectedViews
+			c.proc.Tx.AffectedRows = affectedRows
+		}()
+
+		err = stmt.(*Stmt).exec(ctx, args)
+		if err == nil {
+			selectedViews = stmt.(*Stmt).proc.Tx.SelectedViews
+			affectedRows = stmt.(*Stmt).proc.Tx.AffectedRows
+		}
+		return err
+	}
+
+	statements, _, err := parser.Parse(queryString, "", c.proc.Tx.Flags.DatetimeFormat, false)
 	if err != nil {
 		return query.NewSyntaxError(err.(*parser.SyntaxError))
 	}
