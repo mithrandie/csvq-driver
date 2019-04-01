@@ -5,7 +5,10 @@ import (
 	"database/sql"
 	"flag"
 	"fmt"
+	"log"
 	"time"
+
+	"github.com/mithrandie/csvq/lib/query"
 
 	_ "github.com/mithrandie/csvq-driver"
 )
@@ -20,11 +23,11 @@ func main() {
 
 	db, err := sql.Open("csvq", *repository)
 	if err != nil {
-		panic(err.Error())
+		exitWithError(err)
 	}
 	defer func() {
 		if err := db.Close(); err != nil {
-			panic(err.Error())
+			exitWithError(err)
 		}
 	}()
 	fmt.Println("######## Opened")
@@ -34,26 +37,40 @@ func main() {
 	execSingleRowQuery(ctx, db)
 
 	if err := execQuery(ctx, db); err != nil {
-		panic(err.Error())
+		exitWithError(err)
 	}
 
 	if err := execMultipleResultSetQuery(ctx, db); err != nil {
-		panic(err.Error())
+		exitWithError(err)
 	}
 
 	if err := execPrepared(ctx, db); err != nil {
-		panic(err.Error())
+		exitWithError(err)
 	}
 
 	if err := execPreparedWithNamedValue(ctx, db); err != nil {
-		panic(err.Error())
+		exitWithError(err)
 	}
 
 	if err := execUpdateInTransaction(ctx, db); err != nil {
-		println(err.Error())
+		exitWithError(err)
 	}
 
 	return
+}
+
+func exitWithError(err error) {
+	if queryErr, ok := err.(query.Error); ok {
+		log.Fatalf("Error Code:%d, Number:%d, Line:%d, Char:%d, Message:%s",
+			queryErr.Code(),
+			queryErr.Number(),
+			queryErr.Line(),
+			queryErr.Char(),
+			queryErr.Message(),
+		)
+	} else {
+		log.Fatal(err.Error())
+	}
 }
 
 func execPing(ctx context.Context, db *sql.DB) {
@@ -105,8 +122,8 @@ func execQuery(ctx context.Context, db *sql.DB) error {
 
 func execMultipleResultSetQuery(ctx context.Context, db *sql.DB) error {
 	queryString := "" +
-		"    SELECT id, first_name, country_code FROM `users.csv` WHERE country_code = 'PL' LIMIT 3;\n" +
-		"    SELECT * FROM `users.csv` WHERE country_code = 'AR' LIMIT 3;"
+		"SELECT id, first_name, country_code FROM `users.csv` WHERE country_code = 'PL' LIMIT 3;\n" +
+		"SELECT * FROM `users.csv` WHERE country_code = 'AR' LIMIT 3;"
 	fmt.Printf("\n######## Exec Multiple-Result-Set Query: %s\n", queryString)
 
 	rs, err := db.QueryContext(ctx, queryString)
