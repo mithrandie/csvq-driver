@@ -6,11 +6,22 @@ import (
 	"database/sql/driver"
 	"errors"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/mithrandie/csvq/lib/parser"
 	"github.com/mithrandie/csvq/lib/query"
 )
+
+var session *query.Session
+var getSession sync.Once
+
+func GetSession() *query.Session {
+	getSession.Do(func() {
+		session = query.NewSession()
+	})
+	return session
+}
 
 type CompositeError struct {
 	Errors []error
@@ -39,7 +50,7 @@ type Conn struct {
 }
 
 func NewConn(ctx context.Context, dsn string, defaultWaitTimeout time.Duration, retryDelay time.Duration) (*Conn, error) {
-	sess := query.NewSession()
+	sess := GetSession()
 	sess.Stdout = &query.Discard{}
 	sess.Stderr = &query.Discard{}
 
