@@ -117,7 +117,7 @@ You can replace input/output interface of the csvq to pass the data from inside 
 | :--- | :--- | :--- |
 | SetStdin(r io.ReadCloser)   | os.Stdin      | Replace input interface. Passed data can be refered as a temporary table named "STDIN". |
 | SetStdout(w io.WriteCloser) | query.Discard | Replace output interface. Logs and result-sets of select queries are written to stdout. |
-| SetOutFile(w io.Writer)     | query.Discard | Put a writer for result-sets of select queries to write instead of stdout. |
+| SetOutFile(w io.Writer)     | nil           | Put a writer for result-sets of select queries to write instead of stdout. |
 
 The following structs are available for replacement.
 
