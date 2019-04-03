@@ -1,6 +1,7 @@
 package csvq
 
 import (
+	"context"
 	"database/sql/driver"
 
 	"github.com/mithrandie/csvq/lib/parser"
@@ -22,7 +23,7 @@ func NewTx(proc *query.Processor) (driver.Tx, error) {
 
 func (tx Tx) Commit() error {
 	expr := parser.TransactionControl{Token: parser.COMMIT}
-	err := tx.proc.Commit(expr)
+	err := tx.proc.Commit(context.Background(), expr)
 	if err == nil {
 		tx.proc.Tx.AutoCommit = true
 	}
