@@ -1,3 +1,8 @@
+// Usage:
+//   $ cd $GOPATH/src/github.com/mithrandie/csvq-driver
+//   $ go build ./example/csvq-driver/csvq-replace-io-example.go
+//   $ ./csvq-replace-io-example
+//
 package main
 
 import (
