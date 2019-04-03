@@ -129,4 +129,4 @@ The following structs are available for replacement.
 > "query" means the package "github.com/mithrandie/csvq/lib/query".
 
 
-See: [https://github.com/mithrandie/csvq-driver/blob/master/example/csvq-replace-io/csvq-replace-io-example.go](https://github.com/mithrandie/csvq-driver/blob/master/example/csvq-replace-io/csvq-replace-io-example.go)
+See: [https://github.com/mithrandie/csvq-driver/blob/master/example/replace-io/csvq-replace-io-example.go](https://github.com/mithrandie/csvq-driver/blob/master/example/replace-io/csvq-replace-io-example.go)
