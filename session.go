@@ -1,6 +1,7 @@
 package csvq
 
 import (
+	"context"
 	"io"
 	"sync"
 
@@ -13,20 +14,24 @@ var getSessionOnce sync.Once
 func getSession() *query.Session {
 	getSessionOnce.Do(func() {
 		session = query.NewSession()
-		session.Stdout = &query.Discard{}
-		session.Stderr = &query.Discard{}
+		session.SetStdout(&query.Discard{})
+		session.SetStderr(&query.Discard{})
 	})
 	return session
 }
 
-func SetStdin(r io.ReadCloser) {
-	getSession().Stdin = r
+func SetStdin(r io.ReadCloser) error {
+	return SetStdinContext(context.Background(), r)
+}
+
+func SetStdinContext(ctx context.Context, r io.ReadCloser) error {
+	return getSession().SetStdinContext(ctx, r)
 }
 
 func SetStdout(w io.WriteCloser) {
-	getSession().Stdout = w
+	getSession().SetStdout(w)
 }
 
 func SetOutFile(w io.Writer) {
-	getSession().OutFile = w
+	getSession().SetOutFile(w)
 }

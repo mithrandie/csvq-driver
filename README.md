@@ -113,11 +113,12 @@ See: [https://github.com/mithrandie/csvq-driver/blob/master/example/csvq-driver/
 
 You can replace input/output interface of the csvq to pass the data from inside of your go programs or retrive the result-sets as a another format.
 
-| function in the csvq-driver | default | description |
+| function in the csvq-driver                          | default       | description |
 | :--- | :--- | :--- |
-| SetStdin(r io.ReadCloser)   | os.Stdin      | Replace input interface. Passed data can be refered as a temporary table named "STDIN". |
-| SetStdout(w io.WriteCloser) | query.Discard | Replace output interface. Logs and result-sets of select queries are written to stdout. |
-| SetOutFile(w io.Writer)     | nil           | Put a writer for result-sets of select queries to write instead of stdout. |
+| SetStdin(r io.ReadCloser) error                      | os.Stdin      | Replace input interface. Passed data can be refered as a temporary table named "STDIN". |
+| SetStdin(ctx context.Context, r io.ReadCloser) error |               |  |
+| SetStdout(w io.WriteCloser)                          | query.Discard | Replace output interface. Logs and result-sets of select queries are written to stdout. |
+| SetOutFile(w io.Writer)                              | nil           | Put a writer for result-sets of select queries to write instead of stdout. |
 
 The following structs are available for replacement.
 

@@ -59,7 +59,9 @@ func main() {
 	stdin := query.NewInput(strings.NewReader(data))
 	stdout := query.NewOutput()
 	outfile := query.NewOutput()
-	csvq.SetStdin(stdin)
+	if err := csvq.SetStdin(stdin); err != nil {
+		panic(err)
+	}
 	csvq.SetStdout(stdout)
 	csvq.SetOutFile(outfile)
 
