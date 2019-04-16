@@ -38,22 +38,22 @@ func (r *resultSet) next(dest []driver.Value) error {
 	for i, v := range r.view.RecordSet[r.rowIndex] {
 		val := v.Value()
 		switch val.(type) {
-		case value.String:
-			dest[i] = val.(value.String).Raw()
-		case value.Integer:
-			dest[i] = val.(value.Integer).Raw()
-		case value.Float:
-			dest[i] = val.(value.Float).Raw()
-		case value.Boolean:
-			dest[i] = val.(value.Boolean).Raw()
-		case value.Ternary:
+		case *value.String:
+			dest[i] = val.(*value.String).Raw()
+		case *value.Integer:
+			dest[i] = val.(*value.Integer).Raw()
+		case *value.Float:
+			dest[i] = val.(*value.Float).Raw()
+		case *value.Boolean:
+			dest[i] = val.(*value.Boolean).Raw()
+		case *value.Ternary:
 			if val.Ternary() == ternary.UNKNOWN {
 				dest[i] = nil
 			} else {
 				dest[i] = val.Ternary().ParseBool()
 			}
-		case value.Datetime:
-			dest[i] = val.(value.Datetime).Raw()
+		case *value.Datetime:
+			dest[i] = val.(*value.Datetime).Raw()
 		default: // Null
 			dest[i] = nil
 		}
