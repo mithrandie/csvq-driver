@@ -36,7 +36,7 @@ func (r *resultSet) next(dest []driver.Value) error {
 	}
 
 	for i, v := range r.view.RecordSet[r.rowIndex] {
-		val := v.Value()
+		val := v[0]
 		switch val.(type) {
 		case *value.String:
 			dest[i] = val.(*value.String).Raw()
