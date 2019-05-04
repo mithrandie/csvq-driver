@@ -74,7 +74,7 @@ func main() {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	db, err := sql.Open("csvq", "/path/to/datafile")
+	db, err := sql.Open("csvq", "/path/to/data/directory")
 	if err != nil {
 		panic(err)
 	}
