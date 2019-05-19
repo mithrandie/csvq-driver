@@ -141,7 +141,7 @@ func (c *Conn) exec(ctx context.Context, queryString string, args []driver.Named
 		return err
 	}
 
-	statements, _, err := parser.Parse(queryString, "", c.proc.Tx.Flags.DatetimeFormat, false)
+	statements, _, err := parser.Parse(queryString, "", c.proc.Tx.Flags.DatetimeFormat, false, c.proc.Tx.Flags.AnsiQuotes)
 	if err != nil {
 		return query.NewSyntaxError(err.(*parser.SyntaxError))
 	}
