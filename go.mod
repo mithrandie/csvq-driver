@@ -1,7 +1,7 @@
 module github.com/mithrandie/csvq-driver
 
 require (
-	github.com/mithrandie/csvq v1.12.1
+	github.com/mithrandie/csvq v1.12.2
 	github.com/mithrandie/ternary v1.1.0
 )
 
