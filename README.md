@@ -41,6 +41,24 @@ Go 1.12 or later (ref. [Getting Started - The Go Programming Language](https://g
 A data source name to call sql.Open is a directory path.
 It is the same as "--repository" option of the csvq command.
 
+Some parameters can be specified in a DSN string with a directory path.
+A directory path and parameters are separated by a question mark, and parameters are separated by ampersands.
+
+```go
+db, err := sql.Open("csvq", "/path/to/data/directory?Param1=Value&Param2=Value")
+```
+
+#### Parameters that can be specified
+
+| Name | Type | Default |
+| :--- | :--- | :--- |
+| Timezone | string | "Local" |
+| DatetimeFormat | string | empty string |
+| AnsiQuotes | bool | false |
+
+See: [csvq > Reference Manual > Command Usage > Options](https://mithrandie.github.io/csvq/reference/command.html#options)
+
+
 ### Error Handling
 
 If a received error is a returned error from csvq, you can cast the error to github.com/mithrandie/csvq/lib/query.Error interface.
