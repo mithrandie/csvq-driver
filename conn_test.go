@@ -217,3 +217,109 @@ func TestConn_ExecContext(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+var parseDSNTests = []struct {
+	DSN      string
+	Result   DSN
+	HasError bool
+}{
+	{
+		DSN: "/path/to/data/directory",
+		Result: DSN{
+			repository:     "/path/to/data/directory",
+			timezone:       "Local",
+			datetimeFormat: "",
+			ansiQuotes:     false,
+		},
+		HasError: false,
+	},
+	{
+		DSN: "/path/to/data/directory?",
+		Result: DSN{
+			repository:     "/path/to/data/directory",
+			timezone:       "Local",
+			datetimeFormat: "",
+			ansiQuotes:     false,
+		},
+		HasError: false,
+	},
+	{
+		DSN: "/path/to/data/directory?Timezone=UTC&DatetimeFormat=[\"%d%m%Y\"]&AnsiQuotes=true",
+		Result: DSN{
+			repository:     "/path/to/data/directory",
+			timezone:       "UTC",
+			datetimeFormat: "[\"%d%m%Y\"]",
+			ansiQuotes:     true,
+		},
+		HasError: false,
+	},
+	{
+		DSN: "/path/to/data/directory?timezone=UTC&datetimeformat=[\"%d%m%Y\"]&ansiquotes=true",
+		Result: DSN{
+			repository:     "/path/to/data/directory",
+			timezone:       "UTC",
+			datetimeFormat: "[\"%d%m%Y\"]",
+			ansiQuotes:     true,
+		},
+		HasError: false,
+	},
+	{
+		DSN: "/path/to/data/directory?datetimeformat=[\"?%d%m\\\"%Y=&\"]",
+		Result: DSN{
+			repository:     "/path/to/data/directory",
+			timezone:       "Local",
+			datetimeFormat: "[\"?%d%m\\\"%Y=&\"]",
+			ansiQuotes:     false,
+		},
+		HasError: false,
+	},
+	{
+		DSN: "/path/to/data/directory?timezone&datetimeformat&ansiquotes",
+		Result: DSN{
+			repository:     "/path/to/data/directory",
+			timezone:       "Local",
+			datetimeFormat: "",
+			ansiQuotes:     false,
+		},
+		HasError: false,
+	},
+	{
+		DSN: "/path/to/data/directory?timezone&datetimeformat&ansiquotes=true&",
+		Result: DSN{
+			repository:     "/path/to/data/directory",
+			timezone:       "Local",
+			datetimeFormat: "",
+			ansiQuotes:     true,
+		},
+		HasError: false,
+	},
+	{
+		DSN:      "/path/to/data/directory?timezone&datetimeformat&ansiquotes=err&",
+		HasError: true,
+	},
+	{
+		DSN:      "/path/to/data/directory?Timezone=UTC&IncorrectParam=true",
+		HasError: true,
+	},
+}
+
+func TestParseDSN(t *testing.T) {
+	for _, v := range parseDSNTests {
+		result, err := ParseDSN(v.DSN)
+		if v.HasError {
+			if err == nil {
+				t.Errorf("%s: no error has returned", v.DSN)
+			}
+			continue
+		}
+
+		if err != nil {
+			t.Errorf("%s: unexpected error", v.DSN)
+			continue
+		}
+
+		if !reflect.DeepEqual(result, v.Result) {
+			t.Errorf("%s: DSN is %v, want %v", v.DSN, result, v.Result)
+		}
+	}
+}

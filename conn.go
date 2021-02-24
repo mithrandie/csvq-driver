@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"database/sql/driver"
 	"errors"
+	"strconv"
 	"strings"
 	"time"
 
@@ -38,7 +39,21 @@ type Conn struct {
 	id                 int
 }
 
-func NewConn(ctx context.Context, dsn string, defaultWaitTimeout time.Duration, retryDelay time.Duration) (*Conn, error) {
+type DSN struct {
+	repository     string
+	timezone       string
+	datetimeFormat string
+	ansiQuotes     bool
+}
+
+var DSNParseErr = errors.New("incorrect data source name")
+
+func NewConn(ctx context.Context, dsnStr string, defaultWaitTimeout time.Duration, retryDelay time.Duration) (*Conn, error) {
+	dsn, err := ParseDSN(dsnStr)
+	if err != nil {
+		return nil, driver.ErrBadConn
+	}
+
 	sess := getSession()
 
 	tx, err := query.NewTransaction(ctx, defaultWaitTimeout, retryDelay, sess)
@@ -46,15 +61,20 @@ func NewConn(ctx context.Context, dsn string, defaultWaitTimeout time.Duration, 
 		return nil, driver.ErrBadConn
 	}
 
-	if err := tx.Flags.SetRepository(dsn); err != nil {
+	if err := tx.Flags.SetRepository(dsn.repository); err != nil {
 		return nil, driver.ErrBadConn
 	}
+	if err := tx.Flags.SetLocation(dsn.timezone); err != nil {
+		return nil, driver.ErrBadConn
+	}
+	tx.Flags.SetDatetimeFormat(dsn.datetimeFormat)
+	tx.Flags.SetAnsiQuotes(dsn.ansiQuotes)
 
 	proc := query.NewProcessor(tx)
 	proc.Tx.AutoCommit = true
 
 	return &Conn{
-		dsn:  dsn,
+		dsn:  dsnStr,
 		proc: proc,
 	}, nil
 }
@@ -148,4 +168,129 @@ func (c *Conn) exec(ctx context.Context, queryString string, args []driver.Named
 
 	_, err = c.proc.Execute(query.ContextForStoringResults(ctx), statements)
 	return err
+}
+
+func ParseDSN(dsnStr string) (DSN, error) {
+	type parameter struct {
+		key   []rune
+		value []rune
+	}
+
+	readParam := func(r []rune) (parameter, []rune) {
+		p := parameter{
+			key:   []rune{},
+			value: []rune{},
+		}
+
+		inKeyStr := true
+		inStr := false
+		spIdx := 0
+
+		appendChar := func(c rune) {
+			if inKeyStr {
+				p.key = append(p.key, c)
+			} else {
+				p.value = append(p.value, c)
+			}
+		}
+
+		for i := 0; i < len(r); i++ {
+			c := r[i]
+
+			if inStr {
+				if c == '\\' {
+					appendChar(c)
+					if i+1 < len(r) {
+						appendChar(r[i+1])
+						i++
+					}
+					continue
+				}
+
+				if c == '"' {
+					inStr = false
+				}
+
+				appendChar(c)
+				continue
+			}
+
+			if c == '&' {
+				spIdx = i
+				break
+			}
+
+			if c == '=' {
+				inKeyStr = false
+				continue
+			}
+
+			if c == '"' {
+				inStr = true
+			}
+
+			appendChar(c)
+		}
+
+		if spIdx < 1 || len(r) <= spIdx+1 {
+			return p, nil
+		}
+
+		return p, r[spIdx+1:]
+	}
+
+	dsn := DSN{
+		repository:     "",
+		timezone:       "Local",
+		datetimeFormat: "",
+		ansiQuotes:     false,
+	}
+
+	spIdx := strings.Index(dsnStr, "?")
+	if spIdx < 0 {
+		dsn.repository = dsnStr
+		return dsn, nil
+	}
+
+	dsnRunes := []rune(dsnStr)
+
+	dsn.repository = string(dsnRunes[0:spIdx])
+
+	var params []parameter
+	if spIdx+1 < len(dsnRunes) {
+		r := dsnRunes[spIdx+1:]
+		for r != nil {
+			p, rest := readParam(r)
+			params = append(params, p)
+			r = rest
+		}
+	}
+
+	for _, p := range params {
+		k := string(p.key)
+		v := string(p.value)
+
+		switch strings.ToUpper(k) {
+		case "TIMEZONE":
+			if 0 < len(v) {
+				dsn.timezone = v
+			}
+		case "DATETIMEFORMAT":
+			if 0 < len(v) {
+				dsn.datetimeFormat = v
+			}
+		case "ANSIQUOTES":
+			if 0 < len(v) {
+				b, err := strconv.ParseBool(v)
+				if err != nil {
+					return dsn, DSNParseErr
+				}
+				dsn.ansiQuotes = b
+			}
+		default:
+			return dsn, DSNParseErr
+		}
+	}
+
+	return dsn, nil
 }
