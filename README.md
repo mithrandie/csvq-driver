@@ -56,6 +56,8 @@ db, err := sql.Open("csvq", "/path/to/data/directory?Param1=Value&Param2=Value")
 | DatetimeFormat | string | empty string |
 | AnsiQuotes | bool | false |
 
+> Parameter names are case-insensitive.
+
 See: [csvq > Reference Manual > Command Usage > Options](https://mithrandie.github.io/csvq/reference/command.html#options)
 
 
