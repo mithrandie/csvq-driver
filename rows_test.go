@@ -14,6 +14,11 @@ import (
 	"github.com/mithrandie/ternary"
 )
 
+var UTC = func() *time.Location {
+	utc, _ := time.LoadLocation("UTC")
+	return utc
+}()
+
 var (
 	testEmptySelectedViews = []*query.View(nil)
 	testSelectedViews      = []*query.View{
@@ -26,7 +31,7 @@ var (
 					value.NewFloat(1.234),
 					value.NewBoolean(true),
 					value.NewTernary(ternary.UNKNOWN),
-					value.NewDatetimeFromString("2012-02-01T12:35:43Z", nil),
+					value.NewDatetimeFromString("2012-02-01T12:35:43Z", nil, UTC),
 					value.NewNull(),
 				}),
 				query.NewRecord([]value.Primary{
@@ -35,7 +40,7 @@ var (
 					value.NewFloat(5.678),
 					value.NewBoolean(false),
 					value.NewTernary(ternary.TRUE),
-					value.NewDatetimeFromString("2012-02-01T12:35:43Z", nil),
+					value.NewDatetimeFromString("2012-02-01T12:35:43Z", nil, UTC),
 					value.NewNull(),
 				}),
 			},
