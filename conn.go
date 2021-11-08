@@ -248,7 +248,7 @@ func ParseDSN(dsnStr string) (DSN, error) {
 		timezone:       "Local",
 		datetimeFormat: "",
 		ansiQuotes:     false,
-		delimiter:      ","
+		delimiter:      ",",
 	}
 
 	spIdx := strings.Index(dsnStr, "?")
