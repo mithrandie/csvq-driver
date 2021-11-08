@@ -44,6 +44,7 @@ type DSN struct {
 	timezone       string
 	datetimeFormat string
 	ansiQuotes     bool
+	delimiter      string
 }
 
 var DSNParseErr = errors.New("incorrect data source name")
@@ -65,6 +66,9 @@ func NewConn(ctx context.Context, dsnStr string, defaultWaitTimeout time.Duratio
 		return nil, driver.ErrBadConn
 	}
 	if err := tx.Flags.SetLocation(dsn.timezone); err != nil {
+		return nil, driver.ErrBadConn
+	}
+	if err := tx.Flags.SetDelimiter(dsn.delimiter); err != nil {
 		return nil, driver.ErrBadConn
 	}
 	tx.Flags.SetDatetimeFormat(dsn.datetimeFormat)
@@ -244,6 +248,7 @@ func ParseDSN(dsnStr string) (DSN, error) {
 		timezone:       "Local",
 		datetimeFormat: "",
 		ansiQuotes:     false,
+		delimiter:      ","
 	}
 
 	spIdx := strings.Index(dsnStr, "?")
@@ -286,6 +291,10 @@ func ParseDSN(dsnStr string) (DSN, error) {
 					return dsn, DSNParseErr
 				}
 				dsn.ansiQuotes = b
+			}
+		case "DELIMITER":
+			if 0 < len(v) {
+				dsn.delimiter = v
 			}
 		default:
 			return dsn, DSNParseErr
