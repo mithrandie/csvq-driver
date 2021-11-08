@@ -1,4 +1,4 @@
-module github.com/mithrandie/csvq-driver
+module github.com/nulldiego/csvq-driver
 
 require (
 	github.com/mithrandie/csvq v1.15.2
