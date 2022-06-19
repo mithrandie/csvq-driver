@@ -1,9 +1,9 @@
-name: Uploading coverage profiles
+name: Upload coverage profiles
 
 on:
   workflow_run:
     workflows:
-      - Testing
+      - Test
     branches:
       - master
       - develop
