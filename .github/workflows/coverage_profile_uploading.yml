@@ -23,10 +23,10 @@ jobs:
         with:
           go-version: 1.x
 
-      - name: Create a coverage profile
+      - name: Create Coverage Profile
         run: go test -coverprofile=coverage.txt -covermode=atomic ./...
 
-      - name: Upload the coverage profile
+      - name: Upload Coverage Profile
         uses: codecov/codecov-action@v2
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
