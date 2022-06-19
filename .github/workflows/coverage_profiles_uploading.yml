@@ -1,4 +1,4 @@
-name: Upload coverage profiles
+name: Coverage profile uploading
 
 on:
   workflow_run:
