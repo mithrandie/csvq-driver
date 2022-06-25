@@ -33,7 +33,7 @@ jobs:
           files: coverage.txt
           override_branch: ${{ github.ref_name }}
           fail_ci_if_error: true
-          verbose: false
+          verbose: true
   fail:
     runs-on: ubuntu-latest
     if: ${{ github.event.workflow_run.conclusion == 'failure' }}
