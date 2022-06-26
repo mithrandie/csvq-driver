@@ -2,6 +2,7 @@
 
 A go database/sql driver for [csvq](https://github.com/mithrandie/csvq).
 
+[![GitHub tag (latest SemVer)](https://img.shields.io/github/v/tag/mithrandie/csvq-driver?color=%2320b2aa&label=Latest&sort=semver)](https://github.com/mithrandie/csvq-driver/tags)
 [![Test](https://github.com/mithrandie/csvq-driver/actions/workflows/test.yml/badge.svg)](https://github.com/mithrandie/csvq-driver/actions/workflows/test.yml)
 [![codecov](https://codecov.io/gh/mithrandie/csvq-driver/branch/master/graph/badge.svg)](https://codecov.io/gh/mithrandie/csvq-driver)
 [![License: MIT](https://img.shields.io/badge/License-MIT-lightgrey.svg)](https://opensource.org/licenses/MIT)
