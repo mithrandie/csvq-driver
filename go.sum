@@ -1,7 +1,7 @@
 github.com/mitchellh/go-homedir v1.0.0 h1:vKb8ShqSby24Yrqr/yDYkuFz8d0WUjys40rvnGC8aR0=
 github.com/mitchellh/go-homedir v1.0.0/go.mod h1:SfyaCUpYCn1Vlf4IUYiD9fPX4A5wJrkLzIz1N1q0pr0=
-github.com/mithrandie/csvq v1.17.5 h1:EGOqC3Qy9tdgIQgyPGJ7AD0oBaVg6d1Tx+fFbl1icVI=
-github.com/mithrandie/csvq v1.17.5/go.mod h1:+swkgdc7ArI+eZfHNFyCEniEgLCLgsyIwe9+tipsH4E=
+github.com/mithrandie/csvq v1.17.6 h1:9CmYUpQGe7E9P+KaorkGEPH7Bxo5vXMAmIyKiXigk48=
+github.com/mithrandie/csvq v1.17.6/go.mod h1:+swkgdc7ArI+eZfHNFyCEniEgLCLgsyIwe9+tipsH4E=
 github.com/mithrandie/go-file/v2 v2.1.0 h1:XA5Tl+73GXMDvgwSE3Sg0uC5FkLr3hnXs8SpUas0hyg=
 github.com/mithrandie/go-file/v2 v2.1.0/go.mod h1:9YtTF3Xo59GqC1Pxw6KyGVcM/qubAMlxVsqI/u9r++c=
 github.com/mithrandie/go-text v1.5.3 h1:A+/mtgUsr1EsoVKGb4sm8Suho/Biku9Sh2appII4Mo0=
