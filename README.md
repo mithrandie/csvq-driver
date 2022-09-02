@@ -51,11 +51,11 @@ db, err := sql.Open("csvq", "/path/to/data/directory?Param1=Value&Param2=Value")
 
 #### Parameters that can be specified
 
-| Name | Type | Default |
-| :--- | :--- | :--- |
-| Timezone | string | "Local" |
+| Name           | Type   | Default      |
+|:---------------|:-------|:-------------|
+| Timezone       | string | "Local"      |
 | DatetimeFormat | string | empty string |
-| AnsiQuotes | bool | false |
+| AnsiQuotes     | bool   | false        |
 
 > Parameter names are case-insensitive.
 
@@ -65,16 +65,16 @@ See: [csvq > Reference Manual > Command Usage > Options](https://mithrandie.gith
 ### Error Handling
 
 If a received error is a returned error from csvq, you can cast the error to github.com/mithrandie/csvq/lib/query.Error interface.
-The error interface has following functions.
+The error interface has the following functions.
 
-| function | description |
-| :--- | :--- |
-| Message() string | Error message |
-| Code() int       | Error code. The same as the exit code of the csvq command |
-| Number() int     | Error number |
-| Line() int       | Line number where the error occurred in the passed statement |
+| function         | description                                                    |
+|:-----------------|:---------------------------------------------------------------|
+| Message() string | Error message                                                  |
+| Code() int       | Error code. The same as the exit code of the csvq command      |
+| Number() int     | Error number                                                   |
+| Line() int       | Line number where the error occurred in the passed statement   |
 | Char() int       | Column number where the error occurred in the passed statement |
-| Source() string  | File or statement name where the error occurred |
+| Source() string  | File or statement name where the error occurred                |
 
 ### Example
 
@@ -132,20 +132,20 @@ See: [https://github.com/mithrandie/csvq-driver/blob/master/example/csvq-driver/
 
 ### Replace I/O
 
-You can replace input/output interface of the csvq to pass the data from inside of your go programs or retrive the result-sets as a another format.
+You can replace input/output interface of the csvq to pass the data from inside your go programs or retrive the result-sets as a another format.
 
-| function in the csvq-driver                          | default       | description |
-| :--- | :--- | :--- |
+| function in the csvq-driver                                                                            | default       | description                                                                             |
+|:-------------------------------------------------------------------------------------------------------|:--------------|:----------------------------------------------------------------------------------------|
 | SetStdin(r io.ReadCloser) error<br /><br />SetStdinContext(ctx context.Context, r io.ReadCloser) error | os.Stdin      | Replace input interface. Passed data can be refered as a temporary table named "STDIN". |
-| SetStdout(w io.WriteCloser)                          | query.Discard | Replace output interface. Logs and result-sets of select queries are written to stdout. |
-| SetOutFile(w io.Writer)                              | nil           | Put a writer for result-sets of select queries to write instead of stdout. |
+| SetStdout(w io.WriteCloser)                                                                            | query.Discard | Replace output interface. Logs and result-sets of select queries are written to stdout. |
+| SetOutFile(w io.Writer)                                                                                | nil           | Put a writer for result-sets of select queries to write instead of stdout.              |
 
 The following structs are available for replacement.
 
-| struct name  | initializer |
-| :--- | :--- |
+| struct name  | initializer                 |
+|:-------------|:----------------------------|
 | query.Input  | query.NewInput(r io.Reader) |
-| query.Output | query.NewOutput() |
+| query.Output | query.NewOutput()           |
 
 > "query" means the package "github.com/mithrandie/csvq/lib/query".
 
