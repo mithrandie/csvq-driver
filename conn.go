@@ -40,10 +40,11 @@ type Conn struct {
 }
 
 type DSN struct {
-	repository     string
-	timezone       string
-	datetimeFormat string
-	ansiQuotes     bool
+	repository        string
+	timezone          string
+	datetimeFormat    string
+	ansiQuotes        bool
+	allowUnevenFields bool
 }
 
 var DSNParseErr = errors.New("incorrect data source name")
@@ -69,6 +70,7 @@ func NewConn(ctx context.Context, dsnStr string, defaultWaitTimeout time.Duratio
 	}
 	tx.Flags.SetDatetimeFormat(dsn.datetimeFormat)
 	tx.Flags.SetAnsiQuotes(dsn.ansiQuotes)
+	tx.Flags.SetAllowUnevenFields(dsn.allowUnevenFields)
 
 	proc := query.NewProcessor(tx)
 	proc.Tx.AutoCommit = true
@@ -286,6 +288,14 @@ func ParseDSN(dsnStr string) (DSN, error) {
 					return dsn, DSNParseErr
 				}
 				dsn.ansiQuotes = b
+			}
+		case "ALLOWUNEVENFIELDS":
+			if 0 < len(v) {
+				b, err := strconv.ParseBool(v)
+				if err != nil {
+					return dsn, DSNParseErr
+				}
+				dsn.allowUnevenFields = b
 			}
 		default:
 			return dsn, DSNParseErr
