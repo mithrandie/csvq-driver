@@ -51,13 +51,16 @@ db, err := sql.Open("csvq", "/path/to/data/directory?Param1=Value&Param2=Value")
 
 #### Parameters that can be specified
 
-| Name           | Type   | Default      |
-|:---------------|:-------|:-------------|
-| Timezone       | string | "Local"      |
-| DatetimeFormat | string | empty string |
-| AnsiQuotes     | bool   | false        |
+| Name              | Type   | Default      |
+|:------------------|:-------|:-------------|
+| Timezone          | string | "Local"      |
+| DatetimeFormat    | string | empty string |
+| AnsiQuotes        | bool   | false        |
+| AllowUnevenFields | bool   | false        |
 
 > Parameter names are case-insensitive.
+
+> Currently supports the above options.
 
 See: [csvq > Reference Manual > Command Usage > Options](https://mithrandie.github.io/csvq/reference/command.html#options)
 
