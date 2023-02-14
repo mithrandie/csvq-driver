@@ -1,11 +1,177 @@
 package csvq
 
 import (
+	"context"
 	"database/sql"
 	"reflect"
+	"strconv"
 	"strings"
 	"testing"
+	"time"
 )
+
+// go test -benchmem -run=^$ -bench . github.com/mithrandie/csvq-driver -benchtime=1000x
+func BenchmarkQueryOnlyOneTx(b *testing.B) {
+	db, _ := sql.Open("csvq", TestDir)
+	defer func() {
+		_ = db.Close()
+	}()
+
+	queryCreate := `create table OnlyOneTx` + strconv.Itoa(b.N) + ` (column1, column2)`
+	ctx, cancelfunc := context.WithTimeout(context.Background(), 5*time.Minute)
+	defer cancelfunc()
+
+	res, err := db.ExecContext(ctx, queryCreate)
+	if err != nil {
+		b.Logf("Error %s when creating product table", err)
+	}
+
+	rows, err := res.RowsAffected()
+	if err != nil {
+		b.Logf("Error %s when getting rows affected", err)
+		b.Logf("Rows affected when creating table: %d", rows)
+	}
+
+	query := `INSERT INTO OnlyOneTx` + strconv.Itoa(b.N) + `(column1, column2) VALUES (?, ?)`
+
+	stmt, err := db.PrepareContext(ctx, query)
+	if err != nil {
+		b.Logf("Error %s when preparing SQL statement", err)
+	}
+	defer stmt.Close()
+
+	// Get a Tx for making transaction requests.
+	tx, err := db.BeginTx(ctx, nil)
+	if err != nil {
+		b.Logf("Error %s tx", err)
+	}
+
+	defer tx.Commit()
+
+	// run the Fib function b.N times
+	for n := 0; n < b.N; n++ {
+		res, err = stmt.ExecContext(ctx, "str"+strconv.Itoa(n), "str"+strconv.Itoa(n))
+		if err != nil {
+			b.Logf("Error %s when inserting row into table", err)
+		} else {
+			rows, err = res.RowsAffected()
+			if err != nil {
+				b.Logf("Error %s when finding rows affected", err)
+			}
+		}
+		// b.Logf("%d row created ", rows)
+	}
+}
+
+// go test -benchmem -run=^$ -bench ^BenchmarkQueryOnlyOneTxMultipleInsert$ github.com/mithrandie/csvq-driver -benchtime=1000x
+func BenchmarkQueryOnlyOneTxMultipleInsert(b *testing.B) {
+	db, _ := sql.Open("csvq", TestDir)
+	defer func() {
+		_ = db.Close()
+	}()
+
+	queryCreate := `create table OnlyOneTxMultipleInsert` + strconv.Itoa(b.N) + ` (column1, column2)`
+	ctx, cancelfunc := context.WithTimeout(context.Background(), 5*time.Minute)
+	defer cancelfunc()
+
+	res, err := db.ExecContext(ctx, queryCreate)
+	if err != nil {
+		b.Logf("Error %s when creating product table", err)
+	}
+
+	rows, err := res.RowsAffected()
+	if err != nil {
+		b.Logf("Error %s when getting rows affected", err)
+		b.Logf("Rows affected when creating table: %d", rows)
+	}
+
+	query := `INSERT INTO OnlyOneTxMultipleInsert` + strconv.Itoa(b.N) + `(column1, column2) VALUES (?, ?),(?, ?)`
+
+	stmt, err := db.PrepareContext(ctx, query)
+	if err != nil {
+		b.Logf("Error %s when preparing SQL statement", err)
+	}
+	defer stmt.Close()
+
+	// Get a Tx for making transaction requests.
+	tx, err := db.BeginTx(ctx, nil)
+	if err != nil {
+		b.Logf("Error %s tx", err)
+	}
+
+	defer tx.Commit()
+
+	// run the Fib function b.N times
+	for n := 0; n < b.N/2; n++ {
+		res, err = stmt.ExecContext(ctx, "str"+strconv.Itoa(n), "str"+strconv.Itoa(n), "str"+strconv.Itoa(n), "str"+strconv.Itoa(n))
+		if err != nil {
+			b.Logf("Error %s when inserting row into table", err)
+		} else {
+			rows, err = res.RowsAffected()
+			if err != nil {
+				b.Logf("Error %s when finding rows affected", err)
+			}
+		}
+	}
+
+	// var count int
+	// row := db.QueryRow("SELECT COUNT(*) FROM OnlyOneTxMultipleInsert" + strconv.Itoa(b.N))
+	// err = row.Scan(&count)
+	// if err == nil {
+	// 	b.Log(count == b.N)
+	// }
+}
+
+func BenchmarkQueryTxEveryIter(b *testing.B) {
+	db, _ := sql.Open("csvq", TestDir)
+	defer func() {
+		_ = db.Close()
+	}()
+
+	queryCreate := `create table TxEveryIter` + strconv.Itoa(b.N) + ` (column1, column2)`
+	ctx, cancelfunc := context.WithTimeout(context.Background(), 5*time.Minute)
+	defer cancelfunc()
+
+	res, err := db.ExecContext(ctx, queryCreate)
+	if err != nil {
+		b.Logf("Error %s when creating product table", err)
+	}
+
+	rows, err := res.RowsAffected()
+	if err != nil {
+		b.Logf("Error %s when getting rows affected", err)
+		b.Logf("Rows affected when creating table: %d", rows)
+	}
+
+	query := `INSERT INTO TxEveryIter` + strconv.Itoa(b.N) + `(column1, column2) VALUES (?, ?)`
+
+	stmt, err := db.PrepareContext(ctx, query)
+	if err != nil {
+		b.Logf("Error %s when preparing SQL statement", err)
+	}
+	defer stmt.Close()
+
+	// run the Fib function b.N times
+	for n := 0; n < b.N; n++ {
+		// Get a Tx for making transaction requests.
+		tx, err := db.BeginTx(ctx, nil)
+		if err != nil {
+			b.Logf("Error %s tx", err)
+		}
+
+		res, err = stmt.ExecContext(ctx, "str"+strconv.Itoa(n), "str"+strconv.Itoa(n))
+		if err != nil {
+			b.Logf("Error %s when inserting row into table", err)
+		} else {
+			rows, err = res.RowsAffected()
+			if err != nil {
+				b.Logf("Error %s when finding rows affected", err)
+			}
+		}
+
+		tx.Commit()
+	}
+}
 
 func TestStmt_Query(t *testing.T) {
 	db, _ := sql.Open("csvq", TestDir)
