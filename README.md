@@ -16,7 +16,7 @@ You can use the statements in the same way as other relational database systems.
 
 ## Requirements
 
-Go 1.17 or later (ref. [Getting Started - The Go Programming Language](https://golang.org/doc/install))
+Go 1.18 or later (ref. [Getting Started - The Go Programming Language](https://golang.org/doc/install))
 
 
 ## Supported features
